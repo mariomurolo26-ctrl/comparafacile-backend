@@ -17,7 +17,7 @@ app.add_middleware(
 
 # Inserisci qui le tue chiavi di Supabase (controlla che siano tra le virgolette!)
 SUPABASE_URL = "https://bqyyhpmxatvuxvlnwdwp.supabase.co"
-SUPABASE_KEY = "sb_secret_JIWFEvD6Y3-zSnbcmE8apw_bDmjs7hn"
+SUPABASE_KEY = "sb_secret_hPF87wt2AuXzEEQQdEuNlg_xecCJcwV"
 
 supabase = create_client(SUPABASE_POOLER_URL, SUPABASE_KEY)
 

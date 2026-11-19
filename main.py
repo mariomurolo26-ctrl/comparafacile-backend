@@ -19,7 +19,10 @@ app.add_middleware(
 SUPABASE_URL = "https://bqyyhpmxatvuxvlnwdwp.supabase.co"
 SUPABASE_KEY = "sb_secret_JIWFEvD6Y3-zSnbcmE8apw_bDmjs7hn"
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+SUPABASE_POOLER_URL = "postgresql://postgres.bqyyhpmxatvuxvlnwdwp:Fastenergy2026@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
+
+supabase = create_client(SUPABASE_POOLER_URL, SUPABASE_KEY)
+
 
 class DatiUtente(BaseModel):
     tipo_fornitura: str

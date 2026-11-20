@@ -37,6 +37,8 @@ class DatiUtente(BaseModel):
 class DatiSalvataggio(DatiUtente):
     nome_file_bolletta: str = "Nessun file caricato"
     offerta_scelta: str
+    privacy_accettata: bool = False
+    consenso_marketing: bool = False
 
 @app.get("/")
 def home():

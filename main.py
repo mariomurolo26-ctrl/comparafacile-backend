@@ -25,27 +25,29 @@ class DatiUtente(BaseModel):
     telefono: str
     codice_fiscale: str = ""
     residenza: str
+    nome_file_bolletta: str = ""
 
 @app.post("/confronta")
 async def confronta_offerte(dati: DatiUtente):
     if dati.tipo_servizio == 'telefonia':
-        # Telefonia: Wind e Fastweb fissi come richiesto
         offerte = [
-            {"fornitore": "WindTre", "offerta": "Wind Smart Unlimited", "prezzo": "9.99 €/mese", "tipo": "Mobile"},
-            {"fornitore": "Fastweb", "offerta": "Fastweb Mobile", "prezzo": "7.95 €/mese", "tipo": "Mobile"}
+            {"fornitore": "WindTre", "offerta": "Wind Smart Unlimited", "prezzo": "9.99 €/mese"},
+            {"fornitore": "Fastweb", "offerta": "Fastweb Mobile", "prezzo": "7.95 €/mese"}
         ]
     else:
-        # Energia: Prezzi dinamici (variano a ogni chiamata per simulare il mercato)
-        base_luce = round(random.uniform(0.10, 0.16), 4)
-        base_gas = round(random.uniform(0.40, 0.55), 4)
+        # Generiamo prezzi casuali ma li arrotondiamo a 4 decimali
+        base_luce = round(random.uniform(0.09, 0.15), 4)
+        base_gas = round(random.uniform(0.38, 0.50), 4)
         
         offerte = [
-            {"fornitore": "Enel Energia", "offerta": "Fix Tutto", "prezzo": f"{base_luce + 0.01} €/kWh", "tipo": "Luce"},
-            {"fornitore": "Eni Plenitude", "offerta": "Trend Casa", "prezzo": f"{base_luce + 0.02} €/kWh", "tipo": "Luce"},
-            {"fornitore": "A2A", "offerta": "Click", "prezzo": f"{base_luce} €/kWh", "tipo": "Luce"},
-            {"fornitore": "Edison", "offerta": "Energia Mia", "prezzo": f"{base_gas} €/Smc", "tipo": "Gas"}
+            {"fornitore": "A2A", "offerta": "Click", "prezzo": f"{round(base_luce, 4)} €/kWh"},
+            {"fornitore": "Enel Energia", "offerta": "Fix Tutto", "prezzo": f"{round(base_luce + 0.01, 4)} €/kWh"},
+            {"fornitore": "Eni Plenitude", "offerta": "Trend Casa", "prezzo": f"{round(base_luce + 0.015, 4)} €/kWh"},
+            {"fornitore": "Estra", "offerta": "Estra Energia", "prezzo": f"{round(base_luce + 0.02, 4)} €/kWh"},
+            {"fornitore": "Centro Asta", "offerta": "Asta Conveniente", "prezzo": f"{round(base_luce + 0.025, 4)} €/kWh"},
+            {"fornitore": "Edison", "offerta": "Energia Mia", "prezzo": f"{round(base_gas, 4)} €/Smc"}
         ]
-        # Ordiniamo per prezzo crescente per mostrare le migliori
+        # Ordiniamo per prezzo crescente (dal più conveniente al più caro)
         offerte = sorted(offerte, key=lambda x: float(x["prezzo"].split()[0]))
     
     return {"risultati": offerte}

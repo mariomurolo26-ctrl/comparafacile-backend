@@ -14,13 +14,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SUPABASE_URL = "https://bqyyhpmxatvuxvlnwdwp.supabase.co"
-# Incolla qui la tua chiave SUPABASE (anon public o service_role) oppure impostala su Render in Environment Variables
+# CONTROLLA CHE QUESTO URL SIA IDENTICO A QUELLO IN SUPABASE -> PROJECT SETTINGS -> API -> PROJECT URL
+SUPABASE_URL = "https://bqyyhpmxavtuvxlnowdp.supabase.co"
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxeXlocG14YXZ0dXZ4bG5vd2RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwOTU3NTgsImV4cCI6MjExMDY3MTc1OH0.pkBektrwI8yZE0f1SvW6RHMePqNGYLqkq5XAj_h1Qps")
 
 class DatiUtente(BaseModel):
     tipo_servizio: str
-    tipo_fornitura: str = "luce"  # luce, gas, dual
+    tipo_fornitura: str = "luce"
     tipo_cliente: str
     tipo_pratica: str
     nome: str
@@ -44,13 +44,18 @@ def home():
 
 @app.post("/confronta")
 async def confronta_offerte(dati: DatiUtente):
-    # Costruisce il filtro per Supabase
+    # 1. TELEFONIA: resta fissa come richiesto
     if dati.tipo_servizio == "telefonia":
-        filtro = "tipo_servizio=eq.telefonia&attiva=eq.true"
-    else:
-        filtro = f"tipo_servizio=eq.energia&tipo_fornitura=eq.{dati.tipo_fornitura}&attiva=eq.true"
+        return {
+            "risultati": [
+                {"fornitore": "WindTre", "offerta": "Fibra Tutto Incluso", "prezzo": "20.00 €/mese"},
+                {"fornitore": "Fastweb", "offerta": "Fibra Tutto Incluso", "prezzo": "23.95 €/mese"}
+            ]
+        }
 
-    # 1. Legge le offerte che hai inserito tu su Supabase
+    # 2. ENERGIA: legge SOLO da Supabase (ilike ignora maiuscole/minuscole su luce, gas, dual)
+    filtro = f"tipo_servizio=ilike.energia&tipo_fornitura=ilike.{dati.tipo_fornitura}&attiva=eq.true"
+    
     try:
         async with httpx.AsyncClient() as client:
             res = await client.get(
@@ -59,41 +64,17 @@ async def confronta_offerte(dati: DatiUtente):
                     "apikey": SUPABASE_KEY,
                     "Authorization": f"Bearer {SUPABASE_KEY}"
                 },
-                timeout=8.0
+                timeout=10.0
             )
             if res.status_code == 200:
                 offerte_db = res.json()
-                if len(offerte_db) > 0:
-                    return {"risultati": offerte_db}
+                return {"risultati": offerte_db}
+            else:
+                raise HTTPException(status_code=400, detail=f"Errore Supabase: {res.text}")
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        print("Errore lettura Supabase:", e)
-
-    # 2. Offerte di backup divise per Luce, Gas, Dual e Telefonia (se la tabella su Supabase è ancora vuota)
-    if dati.tipo_servizio == 'telefonia':
-        offerte = [
-            {"fornitore": "WindTre", "offerta": "Fibra Wind", "prezzo": "20.00 €/mese"},
-            {"fornitore": "Fastweb", "offerta": "Fastweb Fibra", "prezzo": "23.95 €/mese"}
-        ]
-    elif dati.tipo_fornitura == 'gas':
-        offerte = [
-            {"fornitore": "Edison", "offerta": "Energia Mia Gas", "prezzo": "0.4500 €/Smc"},
-            {"fornitore": "Eni Plenitude", "offerta": "Trend Casa Gas", "prezzo": "0.4700 €/Smc"},
-            {"fornitore": "A2A", "offerta": "Click Gas", "prezzo": "0.4850 €/Smc"}
-        ]
-    elif dati.tipo_fornitura == 'dual':
-        offerte = [
-            {"fornitore": "Enel Energia", "offerta": "Fix Tutto Dual", "prezzo": "0.135 €/kWh + 0.46 €/Smc"},
-            {"fornitore": "Eni Plenitude", "offerta": "Trend Casa Luce & Gas", "prezzo": "0.145 €/kWh + 0.47 €/Smc"},
-            {"fornitore": "A2A", "offerta": "Click Luce + Gas", "prezzo": "0.125 €/kWh + 0.48 €/Smc"}
-        ]
-    else: # Solo Luce
-        offerte = [
-            {"fornitore": "A2A", "offerta": "Click Luce", "prezzo": "0.1200 €/kWh"},
-            {"fornitore": "Enel Energia", "offerta": "Fix Tutto Luce", "prezzo": "0.1350 €/kWh"},
-            {"fornitore": "Eni Plenitude", "offerta": "Trend Casa Luce", "prezzo": "0.1450 €/kWh"}
-        ]
-
-    return {"risultati": offerte}
+        raise HTTPException(status_code=500, detail=f"Errore connessione Supabase: {str(e)}")
 
 @app.post("/salva")
 async def salva_richiesta(dati: DatiSalvataggio):

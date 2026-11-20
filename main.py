@@ -16,7 +16,7 @@ app.add_middleware(
 
 SUPABASE_URL = "https://bqyyhpmxatvuxvlnwdwp.supabase.co"
 # Qui su Render (backend) puoi mettere la chiave ANON o SERVICE_ROLE nelle Environment Variables
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "INSERISCI_LA_TUA_CHIAVE_SUPABASE")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxeXlocG14YXZ0dXZ4bG5vd2RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwOTU3NTgsImV4cCI6MjExMDY3MTc1OH0.pkBektrwI8yZE0f1SvW6RHMePqNGYLqkq5XAj_h1Qps")
 
 class DatiUtente(BaseModel):
     tipo_servizio: str
